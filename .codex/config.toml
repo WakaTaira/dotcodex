@@ -1,6 +1,6 @@
-# Codex を主セッション（Sol）として使うためのプロジェクト設定です。
-# 契約上のモデル名が環境で異なる場合は、model の 1 行だけを環境の利用可能名へ変更してください。
-model = "gpt-5.6-sol"
+# Sol を主セッションにする場合は、アカウントで利用可能になった時点で次の行を有効化してください。
+# 現在の ChatGPT 認証では gpt-5.6-sol が拒否されるため、model は未指定にして利用可能な global 設定を継承します。
+# model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 
 [agents]
