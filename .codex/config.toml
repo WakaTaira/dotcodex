@@ -1,0 +1,31 @@
+# Codex を主セッション（Sol）として使うためのプロジェクト設定です。
+# 契約上のモデル名が環境で異なる場合は、model の 1 行だけを環境の利用可能名へ変更してください。
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
+[agents]
+enabled = true
+max_concurrent_threads_per_session = 6
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "medium"
+
+[agents.relay_investigator]
+config_file = "agents/relay-investigator.toml"
+
+[agents.relay_implementer]
+config_file = "agents/relay-implementer.toml"
+
+[agents.relay_implementer_std]
+config_file = "agents/relay-implementer-std.toml"
+
+[agents.relay_verifier]
+config_file = "agents/relay-verifier.toml"
+
+[agents.relay_mechanic]
+config_file = "agents/relay-mechanic.toml"
+
+[agents.relay_reviewer]
+config_file = "agents/relay-reviewer.toml"
+
+[agents.relay_fable_reviewer]
+config_file = "agents/relay-fable-reviewer.toml"

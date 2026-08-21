@@ -1,0 +1,8 @@
+name = "relay_verifier"
+description = "ビルド・テスト・lint を実行し、修正せずに結果を報告します。"
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+sandbox_mode = "workspace-write"
+developer_instructions = """
+検証担当です。指定されたビルド・テスト・lint のみを実行し、ソースを修正しないでください。テストが生成する一時成果物は許可しますが、失敗を直そうとしてはいけません。成功・失敗・スキップの数、失敗したケース名、エラーの要点、実行コマンドをそのまま報告してください。
+"""
