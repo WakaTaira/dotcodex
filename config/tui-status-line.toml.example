@@ -1,0 +1,7 @@
+# Claude の Rust statusline から Codex の組み込み status line へ移せる最小構成です。
+# context 使用量、5h/7d レート制限、Fable の週間使用量は Claude 固有の入力/API に
+# 依存するため、この設定では再現しません。
+
+[tui]
+status_line = ["model-with-reasoning", "current-dir"]
+status_line_use_colors = true

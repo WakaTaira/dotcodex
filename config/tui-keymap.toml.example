@@ -1,0 +1,32 @@
+# Claude の keybindings.json から、Codex が提供する同等アクションだけを移した例です。
+# Codex は [tui.keymap.<context>] を使い、Claude 固有の action は対象外です。
+
+[tui.keymap.global]
+open_transcript = "ctrl-o"
+toggle_fast_mode = "meta-o"
+open_external_editor = "ctrl-g"
+
+[tui.keymap.chat]
+interrupt_turn = "escape"
+
+[tui.keymap.composer]
+submit = "enter"
+history_search_previous = "ctrl-r"
+
+[tui.keymap.editor]
+insert_newline = "ctrl-j"
+
+[tui.keymap.approval]
+approve = "y"
+deny = "n"
+cancel = "escape"
+
+[tui.keymap.pager]
+close_transcript = "escape"
+half_page_up = "ctrl-u"
+page_up = "ctrl-b"
+page_down = "ctrl-f"
+scroll_down = "ctrl-n"
+scroll_up = "ctrl-p"
+jump_top = "g"
+jump_bottom = "shift-g"
