@@ -1,27 +1,36 @@
 # dotcodex
 
-Codex を主セッションとして運用するための、個人用エージェント資産です。公開候補の資産をこのリポジトリで管理し、private リポジトリから submodule として利用します。
+WakaTaira の Codex CLI 資産（公開分）。skills / relay エージェント / AGENTS.md / TUI 設定例を単一リポジトリで管理する。
 
-## 方針
+Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config examples.
 
-- `brief-me` / `grill-me` / `gauntlet` で設計と受け入れ条件を固めます。
-- 小さな変更はメインセッションが直接実装します。
-- 分離が有効な大きな実装だけを `relay_implementer*`（Luna）へ委譲します。
-- レビューは個人層の Fable MCP ブリッジを第一候補とし、利用できない場合だけ `relay_reviewer` を使います。
+## 構成
 
-## 内容
+| パス | 内容 |
+|---|---|
+| `.agents/skills/` | 自作スキル 8 種: brief-me / grill-me / gauntlet / relay / hunk-watch / pc-power / creating-pull-requests-en / creating-pull-requests-ja |
+| `.codex/agents/` | relay 系エージェント定義 7 種: investigator / implementer / implementer-std / verifier / mechanic / reviewer / fable-reviewer |
+| `.codex/config.toml` | リポジトリ直下で Codex を起動したときに読まれるプロジェクト設定。上記エージェントの登録と既定モデル |
+| `AGENTS.md` | 確認・行動を求める出力の規範と、公開資産を変更するときの手順 |
+| `config/` | `tui-keymap.toml.example` / `tui-status-line.toml.example` |
+| `docs/` | `relay-agent-mapping.md`（Claude Code 版 relay エージェントとの対応表）/ `migration-scope.md`（Claude 資産のうち移したもの・移さないもの） |
 
-- `.agents/skills/`: Claude 側の公開スキル 8 種を Codex のスキル形式へ移行したもの
-- `.codex/agents/`: Codex ネイティブの relay エージェント
-- `AGENTS.md`: Claude の公開 rule から移した、確認・行動を求める出力規範
-- `.codex/config.toml`: Sol を優先し、未提供時は利用可能な global モデルを使うプロジェクト設定。サブエージェントは Luna を既定にする
-- `config/tui-keymap.toml.example`: Claude の keybindings から Codex に対応する TUI 操作だけを移した例
-- `config/tui-status-line.toml.example`: Claude の Rust statusline から Codex 組み込み表示へ移せる最小構成
-- `docs/relay-agent-mapping.md`: 旧 Claude エージェントとの対応表
-- `docs/migration-scope.md`: 追加移行したものと Codex に受け口がないものの一覧
+## 運用方針
 
-Codex はリポジトリの `.agents/skills` と `.codex/agents` をプロジェクトスコープで読み込みます。Sol が利用可能になったらコメントを外し、現時点では現在の global 設定（この環境では Luna）を使います。
+- 設計は `brief-me` で固め、既存の設計書は `grill-me` で精査し、受け入れ条件は `gauntlet` でテストに落とす
+- 小さな変更はメインセッションが直接実装する。分離が効く大きな実装だけ `relay_implementer*`（Luna）へ委譲する
+- レビューは個人層の Fable MCP ブリッジを第一候補とし、使えないときだけ `relay_reviewer` を使う
+- Sol が利用可能になるまで `.codex/config.toml` の `model` は未指定にし、global 設定のモデルを継承する
 
-## 既存の Claude 資産
+## 導入
 
-既存の `~/.claude/repo` はこのリポジトリから参照も変更もしていません。移行期間中は両方を並行運用できます。
+非公開資産と統合した親リポジトリ（dotcodex-private）の submodule `pub/` として運用するのが正位置。親の `scripts/sync-links.sh` が `~/.agents/skills/` へ symlink を張る。
+
+単体で使う場合は本リポジトリ直下で Codex を起動する。`.agents/skills` と `.codex/agents` がプロジェクトスコープで読み込まれる。
+
+## 備考
+
+- `.agents/skills/grill-me` は [mattpocock/skills](https://github.com/mattpocock/skills) の grill-me 系スキルを起点に大幅に改変・統合したもの（詳細は同ディレクトリの PROVENANCE.md）
+- `.agents/skills/creating-pull-requests-en` は [google/eng-practices](https://github.com/google/eng-practices) の CL description ガイドライン（CC-BY 3.0, Copyright Google LLC）を基礎に大幅改変したもの（詳細は同ディレクトリの PROVENANCE.md）
+- `.agents/skills/creating-pull-requests-ja` は日本語 OSS のマージ済み PR 約 150 件の実地調査に基づく自作。`references/examples.md` に出典 URL 明記付きで公開 PR 本文の引用を含む（詳細は同ディレクトリの PROVENANCE.md）
+- `AGENTS.md` の出力規範は [ayghri/i-have-adhd](https://github.com/ayghri/i-have-adhd)（MIT License, Copyright (c) 2026 Ayoub Ghriss）を日本語へ改変・圧縮したもの。適用範囲を「ユーザーの確認・行動を求める出力」に絞っている
