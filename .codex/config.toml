@@ -1,6 +1,4 @@
-# Sol を主セッションにする場合は、アカウントで利用可能になった時点で次の行を有効化してください。
-# 現在の ChatGPT 認証では gpt-5.6-sol が拒否されるため、model は未指定にして利用可能な global 設定を継承します。
-# model = "gpt-5.6-sol"
+# メインのモデルは未指定にし、ユーザーが選択した Codex モデルを継承します。
 model_reasoning_effort = "high"
 
 [agents]
@@ -27,8 +25,11 @@ config_file = "agents/relay-mechanic.toml"
 [agents.relay_reviewer]
 config_file = "agents/relay-reviewer.toml"
 
-[agents.relay_fable_reviewer]
-config_file = "agents/relay-fable-reviewer.toml"
+[agents.relay_acceptance_writer]
+config_file = "agents/relay-acceptance-writer.toml"
+
+[agents.relay_fable_advisor]
+config_file = "agents/relay-fable-advisor.toml"
 
 [tui]
 status_line = ["model-with-reasoning", "current-dir"]

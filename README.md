@@ -1,6 +1,6 @@
 # dotcodex
 
-WakaTaira の Codex CLI 資産（公開分）。skills / relay エージェント / AGENTS.md / TUI 設定例を単一リポジトリで管理する。
+WakaTaira の Codex CLI 資産（公開分）。スキル、`relay` エージェント、`AGENTS.md`、TUI 設定例を単一リポジトリで管理する。
 
 Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config examples.
 
@@ -9,7 +9,7 @@ Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config e
 | パス | 内容 |
 |---|---|
 | `.agents/skills/` | 自作スキル 8 種: brief-me / grill-me / gauntlet / relay / hunk-watch / pc-power / creating-pull-requests-en / creating-pull-requests-ja |
-| `.codex/agents/` | relay 系エージェント定義 7 種: investigator / implementer / implementer-std / verifier / mechanic / reviewer / fable-reviewer |
+| `.codex/agents/` | `relay` の調査・実装・受け入れテスト作成・検証・機械作業・レビュー・Fable 相談を担う定義 8 種 |
 | `.codex/config.toml` | リポジトリ直下で Codex を起動したときに読まれるプロジェクト設定。上記エージェントの登録と既定モデル |
 | `AGENTS.md` | 確認・行動を求める出力の規範と、公開資産を変更するときの手順 |
 | `config/` | `tui-keymap.toml.example` / `tui-status-line.toml.example` |
@@ -19,14 +19,21 @@ Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config e
 
 - 設計は `brief-me` で固め、既存の設計書は `grill-me` で精査し、受け入れ条件は `gauntlet` でテストに落とす
 - 小さな変更はメインセッションが直接実装する。分離が効く大きな実装だけ `relay_implementer*`（Luna）へ委譲する
-- レビューは個人層の Fable MCP ブリッジを第一候補とし、使えないときだけ `relay_reviewer` を使う
-- Sol が利用可能になるまで `.codex/config.toml` の `model` は未指定にし、global 設定のモデルを継承する
+- テスト作成は `relay_acceptance_writer`、通常レビューは `relay_reviewer` が担う。調査・実装・検証も Codex モデルで完結する
+- Fable 5.1 は難所や案の比較を検討する相談役である。必要なときだけ個人層の MCP を直接呼び、資料整理を分離する場合は `relay_fable_advisor` を使う。提案の採否はメインが判断する
+- メインの `model` は未指定にし、ユーザーが選んだ Codex モデルを継承する
 
 ## 導入
 
-非公開資産と統合した親リポジトリ（dotcodex-private）の submodule `pub/` として運用するのが正位置。親の `scripts/sync-links.sh` が `~/.agents/skills/` へ symlink を張る。
+非公開資産と統合した親リポジトリ（dotcodex-private）の submodule `pub/` として運用するのが正位置である。親の `scripts/sync-links.sh` がスキルを `~/.agents/skills/`、エージェント定義を `~/.codex/agents/` へリンクし、任意の作業先から使える状態にする。
 
 単体で使う場合は本リポジトリ直下で Codex を起動する。`.agents/skills` と `.codex/agents` がプロジェクトスコープで読み込まれる。
+
+## 実行構造
+
+`relay` はメインの直接実装と Codex ネイティブのサブエージェントを使い分ける。`gauntlet` は別の作成担当が書いたテストを独立に再実行し、未実装による失敗とハーネスの失敗を区別する。実装担当にはテスト・fixture・ハーネス設定の保護対象と検証コマンドを渡す。
+
+エージェントのモデルと役割は `docs/relay-agent-mapping.md`、相談時の入力と失敗処理は `.agents/skills/relay/references/fable-consultation.md` に定義する。補助資料は担当が必要になった箇所だけ読む。
 
 ## 備考
 
