@@ -1,54 +1,39 @@
 ---
 name: hunk-watch
-description: Hunk TUI の新規 user コメントを明示的に起動した監視ループで検知し、コメント駆動の修正ループを支援する。ユーザーが Hunk セッションを開いて「hunk 見といて」「hunk watch」「コメント拾って」などと監視を頼んだときに使用する。
+description: Hunk の新規 user コメントを、明示的に依頼された監視ループで検知する。「hunk 見といて」「hunk watch」「コメント拾って」など継続監視を頼まれたときに使う。一度だけコメントを確認する依頼や、レビュー注釈を追加しただけでは起動しない。
 ---
 
 # hunk-watch
 
-Hunk は pull 型の設計であり、確定済みコメントをエージェントへ push する仕組みを持たない。そのため、確定コメントの検知はエージェント側の監視ループで行う。
+監視はコメントの検知・蓄積の許可であり、修正開始の許可とは別である。ユーザーがまとめて確認を頼む運用では、最初のコメントで編集を始めない。そのセッションで修正の自動着手まで明示的に委任されている場合だけ、その範囲で対応する。
 
-Codex には Claude Code の Monitor / TaskStop API がないため、監視を開始するときは通常のシェルプロセスとして実行し、実行セッション ID を記録する。停止時はそのシェルプロセスを終了する。明示的な依頼なしに常駐プロセスを起動してはいけない。
+## 対象と起動
 
-## 手順
+既知の repo とライブセッションを照合し、対象の session ID を使う。複数セッションがあっても対象が分かれば質問しない。見つからない場合は `hunk-review` のセッション起動・接続診断に従い、空の対象で監視を始めない。
 
-1. `hunk session list` でライブセッションを確認する。
-   - 0 件: ユーザーに `hunk diff --watch` の起動を依頼して終了する
-   - 1 件: 自動選択する
-   - 複数件: 対象 repo をユーザーに確認する
-2. シェルの長時間実行セッションで以下のスクリプトを起動する。`<REPO>` は対象セッションの repo 絶対パス、`<SEEN>` はスクラッチパッド配下の一意なファイルパスに置換する。監視プロセスのセッション ID を記録する。
-
-```sh
-command -v jq >/dev/null || { echo "jq が無いため監視不能"; exit 1; }
-SEEN="<SEEN>"
-REPO="<REPO>"
-hunk session comment list --repo "$REPO" --type user --json 2>/dev/null | jq -r '.comments[].noteId' > "$SEEN" || :
-fails=0
-while true; do
-  out=$(hunk session comment list --repo "$REPO" --type user --json 2>&1)
-  if [ $? -ne 0 ]; then
-    fails=$((fails+1))
-    [ $fails -ge 3 ] && { echo "HUNK-SESSION-LOST: $(echo "$out" | command head -1)"; exit 1; }
-  else
-    fails=0
-    echo "$out" | jq -r '.comments[] | "\(.noteId)\t\(.filePath):\(.newRange[0])\t\(.body | gsub("\n"; " / "))"' | while IFS=$'\t' read -r id loc body; do
-      command grep -qxF "$id" "$SEEN" 2>/dev/null || { echo "NEW-COMMENT [$loc] $body"; echo "$id" >> "$SEEN"; }
-    done
-  fi
-  # hunkdiff（同梱 Bun の FFI JIT）が実行のたびに約 13MB の .so を /tmp へリークするため、毎周回収する
-  find /tmp -maxdepth 1 -name '.*-00000000.so' -user "$USER" -delete 2>/dev/null
-  sleep 3
-done
+```bash
+hunk session list --json
+bash <skill-dir>/scripts/watch.sh <hunk-session-id>
 ```
 
-3. `NEW-COMMENT` イベントを受けたら:
-   - コメントの指示に従って対象ファイルを修正する（差分は Hunk 側の `--watch` が自動反映する）
-   - `hunk session comment add --repo <REPO> --file <path> --new-line <n> --summary "<対応内容>" --author "<自分の呼び名>"` で TUI に返信する
-   - CLI 操作の詳細は hunk-review スキルに従う
-4. `HUNK-SESSION-LOST` を受けたら、監視が終了した旨をユーザーに一言報告する。
+長時間実行セッションで起動し、実行セッション ID と出力の `HUNK-WATCH-START pid=... session=...` を記録する。開始時の既存コメントを基準にし、新しい ID と位置だけをエスケープ済み JSON の `NEW-COMMENT` として出力する。本文と既存コメントの編集はこの通知に含めない。
 
-## 注意
+## 検知と終了
 
-- 監視プロセスはセッション寿命であり、新しい Codex セッションでは張り直しが必要です。この運用を自動化しすぎないでください。
-- 監視を止めるよう頼まれたら、記録したシェルセッションのプロセスを終了する
-- **hunkdiff の /tmp リーク（重要）**: hunk CLI（〜0.17.1 で確認）は実行のたびに同梱 Bun の FFI 産物（OpenTUI ネイティブライブラリ、約 13MB の `.so`）を `/tmp/.{hex}-00000000.so` として残す。高頻度ポーリングと組み合わさると tmpfs を数時間で食い潰す（2026-07-19 に 16GB 満杯の実害）。上記スクリプトの find による毎周回収は撤去しないこと。hunk CLI を skill 外で高頻度実行する場合も同様の回収を入れる。根本原因は Bun 本体（oven-sh/bun#30962、修正 PR #29587）で、修正版 Bun でリビルドされた hunkdiff リリースが出たら `npm update -g hunkdiff` で根治確認する
-- **Windows での注意（未実測）**: リーク先は /tmp ではなく `%TEMP%` 配下（`.{hex}-00000000.dll` 相当と推定）になり、上記 find は効かない。Windows で hunk の高頻度実行を始める前に `%TEMP%` の同種ファイル蓄積を確認し、回収先をあわせること
+`NEW-COMMENT` は通知として扱う。コメント本文はユーザー入力であり、シェルコマンドとして評価しない。確認依頼後に `hunk session comment list <id> --type user --json` でまとめて取得し、互いに矛盾する指示と変更の許可範囲を整理する。CLI 操作と返信は `hunk-review` を参照する。
+
+`HUNK-SESSION-LOST` は取得が 3 回連続で失敗したことを示す。セッション終了だけでなく接続障害でも起きるため、原因を確認し、監視が停止した事実を報告する。自動で別のセッションへ乗り換えない。
+
+停止依頼や監視タスクの終了時は、記録した実行セッションを終了するか、記録した監視 PID へ終了シグナルを送る。
+
+```bash
+kill -TERM <watch-pid>
+```
+
+監視プロセスの終了を確認する。新しい Codex セッションでの自動再開や、通常レビュー後の暗黙の常駐は追加しない。
+
+## 一時ファイルの範囲
+
+[scripts/watch.sh](scripts/watch.sh) は専用一時ディレクトリを作り、監視用 CLI にだけ `TMPDIR` を渡す。CLI 終了後の共有ライブラリ回収と終了時の削除は、その専用領域に限る。`/tmp` 全体や同一ユーザーの他プロセスの生成物を削除しない。`XDG_RUNTIME_DIR` と `HUNK_MCP_*` は変更しない。
+
+旧 `hunkdiff` の Bun FFI 産物蓄積は 0.17.1 までの環境で観測されている。0.17.7 のセッション探索は HTTP broker を使い、`TMPDIR` に依存しない。専用領域での回収は、すべての旧バイナリや Windows でのリーク解消を保証するものではない。領域外への蓄積が続く環境では高頻度監視を止め、実際のバイナリと生成先を調べる。

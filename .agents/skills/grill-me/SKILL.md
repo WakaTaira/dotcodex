@@ -1,64 +1,32 @@
 ---
 name: grill-me
-description: Interview the user relentlessly about a plan or design until reaching shared understanding, resolving each branch of the decision tree — while capturing the domain model as you go (glossary terms into CONTEXT.md, hard-to-reverse decisions into ADRs). Use when user wants to stress-test a plan, get grilled on their design, or mentions "grill me" / "詰めて" / "問い詰めて".
+description: Stress-test an existing plan through focused questions and concrete scenarios, recording domain terms and consequential decisions. Use for grill me, 詰めて, 問い詰めて, or an explicit design interview.
 ---
 
-# grill-me (docs-enabled)
+# grill-me
 
-Two disciplines run together in this session: a relentless interview, and active domain modeling. The interview sharpens the plan; the modeling writes down what crystallises, so decisions outlive the conversation. (Upstream, this is the composition of `grilling` + `domain-modeling`; here it is flattened into one skill.)
+Find the decisions that could make the plan fail or change its outcome. Keep the interview focused on those decisions, and record the domain knowledge needed to carry them forward.
 
-## The interview
+## Interview
 
-Interview me relentlessly about every aspect of this plan until we reach a shared understanding. Walk down each branch of the design tree, resolving dependencies between decisions one-by-one. For each question, provide your recommended answer.
+Read the plan and the relevant code or documentation before asking about facts available there. Start from the user's unresolved concern rather than restarting an already completed design conversation.
 
-Ask the questions one at a time, waiting for feedback on each question before continuing. Asking multiple questions at once is bewildering.
+Ask one consequential question at a time, with a recommendation and its tradeoff. Resolve dependencies before downstream choices. Use concrete scenarios to test behavior, boundaries, failure recovery, and compatibility.
 
-If a *fact* can be found by exploring the codebase, look it up rather than asking me. The *decisions*, though, are mine — put each one to me and wait for my answer.
+Put product and costly-to-reverse decisions to the user. For routine choices within the accepted scope, propose or adopt the established pattern instead of turning every implementation detail into an interview question. Existing answers remain valid unless new evidence contradicts them.
 
-Do not enact the plan until I confirm we have reached a shared understanding.
+Continue independent research and capture agreed points while awaiting an answer. Stop interviewing once the material decisions needed for the requested work are resolved; exhaustive discussion of every imaginable branch is not the goal.
 
-## Domain modeling as we go
+An interview request alone does not authorize implementing the plan. If implementation is already requested and the relevant decisions are settled, continue within that scope without asking for the same approval again. Unanswered questions remain unresolved.
 
-Actively build and sharpen the project's domain model while interviewing — challenging terms, inventing edge-case scenarios, and writing the glossary and decisions down the moment they crystallise.
+## Domain knowledge
 
-### File structure
+Read existing `CONTEXT.md` and relevant ADRs when they affect the discussion. If `CONTEXT-MAP.md` exists, use it to locate the relevant context.
 
-Most repos have a single context: one `CONTEXT.md` at the repo root (glossary), plus `docs/adr/` for architectural decision records (`0001-slug.md`, `0002-slug.md`, …). If a `CONTEXT-MAP.md` exists at the root, the repo has multiple contexts and the map points to where each `CONTEXT.md` lives.
+Challenge overloaded terms and contradictions that change the behavior being designed. Preserve the distinction between what the code currently does and what the user wants it to do.
 
-Create files lazily — only when you have something to write. If no `CONTEXT.md` exists, create one when the first term is resolved. If no `docs/adr/` exists, create it when the first ADR is needed.
+Record project-specific terms whose ambiguity matters in `CONTEXT.md`, using [CONTEXT-FORMAT.md](CONTEXT-FORMAT.md). Keep it a glossary, not implementation notes or a task log. Reuse an existing glossary; create one only when useful terms need a durable home. Capture related terms together when that is clearer than editing after each utterance.
 
-### Challenge against the glossary
+Record an ADR only for a real tradeoff that is hard to reverse and would surprise a future reader without context. Use [ADR-FORMAT.md](ADR-FORMAT.md), preserving existing locations and numbering. A short plan can carry an ordinary decision without a separate ADR.
 
-When the user uses a term that conflicts with the existing language in `CONTEXT.md`, call it out immediately. "Your glossary defines 'cancellation' as X, but you seem to mean Y — which is it?"
-
-### Sharpen fuzzy language
-
-When the user uses vague or overloaded terms, propose a precise canonical term. "You're saying 'account' — do you mean the Customer or the User? Those are different things."
-
-### Discuss concrete scenarios
-
-When domain relationships are being discussed, stress-test them with specific scenarios. Invent scenarios that probe edge cases and force the user to be precise about the boundaries between concepts.
-
-### Cross-reference with code
-
-When the user states how something works, check whether the code agrees. If you find a contradiction, surface it: "Your code cancels entire Orders, but you just said partial cancellation is possible — which is right?"
-
-### Update CONTEXT.md inline
-
-When a term is resolved, update `CONTEXT.md` right there. Don't batch these up — capture them as they happen. Use the format in [CONTEXT-FORMAT.md](./CONTEXT-FORMAT.md).
-
-`CONTEXT.md` should be totally devoid of implementation details. Do not treat `CONTEXT.md` as a spec, a scratch pad, or a repository for implementation decisions. It is a glossary and nothing else.
-
-### Offer ADRs sparingly
-
-Only offer to create an ADR when all three are true:
-
-1. **Hard to reverse** — the cost of changing your mind later is meaningful
-2. **Surprising without context** — a future reader will wonder "why did they do it this way?"
-3. **The result of a real trade-off** — there were genuine alternatives and you picked one for specific reasons
-
-If any of the three is missing, skip the ADR. Use the format in [ADR-FORMAT.md](./ADR-FORMAT.md).
-
-### Language of the docs
-
-Write `CONTEXT.md` and ADRs in the language the repo's documentation already uses; for repos with no existing documentation, default to Japanese.
+Write documents in the repository's language; default to Japanese where none is established. Finish with the decisions that matter and any unresolved branch, rather than a transcript of the interview.

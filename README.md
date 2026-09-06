@@ -10,16 +10,16 @@ Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config e
 |---|---|
 | `.agents/skills/` | 自作スキル 8 種: brief-me / grill-me / gauntlet / relay / hunk-watch / pc-power / creating-pull-requests-en / creating-pull-requests-ja |
 | `.codex/agents/` | `relay` の調査・実装・受け入れテスト作成・検証・機械作業・レビュー・Fable 相談を担う定義 8 種 |
-| `.codex/config.toml` | リポジトリ直下で Codex を起動したときに読まれるプロジェクト設定。上記エージェントの登録と既定モデル |
+| `.codex/config.toml` | リポジトリ直下で Codex を起動したときに読まれるプロジェクト設定。エージェントの登録と並列実行枠 |
 | `AGENTS.md` | 確認・行動を求める出力の規範と、公開資産を変更するときの手順 |
 | `config/` | `tui-keymap.toml.example` / `tui-status-line.toml.example` |
 | `docs/` | `relay-agent-mapping.md`（Claude Code 版 relay エージェントとの対応表）/ `migration-scope.md`（Claude 資産のうち移したもの・移さないもの） |
 
 ## 運用方針
 
-- 設計は `brief-me` で固め、既存の設計書は `grill-me` で精査し、受け入れ条件は `gauntlet` でテストに落とす
-- 小さな変更はメインセッションが直接実装する。分離が効く大きな実装だけ `relay_implementer*`（Luna）へ委譲する
-- テスト作成は `relay_acceptance_writer`、通常レビューは `relay_reviewer` が担う。調査・実装・検証も Codex モデルで完結する
+- 未整理の構想は `brief-me`、既存設計の精査は `grill-me`、実装前の独立した受け入れ契約は `gauntlet` を使う。合意済みの作業に設計書や再承認を一律に求めない
+- メインのコンテキスト消費と総作業量を抑える。切り出せる実装は `relay_implementer*`（Luna）、大量の資料を読む調査は `relay_investigator`（Terra）へ渡し、根拠付きの要点で統合する。小さな変更は直接実装し、利益のない多段委譲や全文の再読を避ける
+- 独立した受け入れテスト作成は `relay_acceptance_writer`、通常レビューはメインまたは `relay_reviewer` が担う。調査・実装・検証も Codex モデルで完結する
 - Fable 5.1 は難所や案の比較を検討する相談役である。必要なときだけ個人層の MCP を直接呼び、資料整理を分離する場合は `relay_fable_advisor` を使う。提案の採否はメインが判断する
 - メインの `model` は未指定にし、ユーザーが選んだ Codex モデルを継承する
 
@@ -33,7 +33,9 @@ Self-made Codex CLI assets: skills, relay agents, an AGENTS.md, and TUI config e
 
 `relay` はメインの直接実装と Codex ネイティブのサブエージェントを使い分ける。`gauntlet` は別の作成担当が書いたテストを独立に再実行し、未実装による失敗とハーネスの失敗を区別する。実装担当にはテスト・fixture・ハーネス設定の保護対象と検証コマンドを渡す。
 
-エージェントのモデルと役割は `docs/relay-agent-mapping.md`、相談時の入力と失敗処理は `.agents/skills/relay/references/fable-consultation.md` に定義する。補助資料は担当が必要になった箇所だけ読む。
+エージェントのモデルと役割は `docs/relay-agent-mapping.md`、起動時の制約は `.agents/skills/relay/references/delegation.md`、相談時の入力と失敗処理は `.agents/skills/relay/references/fable-consultation.md` に定義する。補助資料は担当が必要になった箇所だけ読む。
+
+スキルは結果と判断基準を中心にし、実際の依存関係や安全上の境界がある処理だけ順序を固定する。PR の説明量は差分行数でなくリスクに合わせる。Hunk の継続監視は明示依頼で起動し、通知と修正の許可を区別する。
 
 ## 備考
 
